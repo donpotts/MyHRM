@@ -8,9 +8,6 @@
 [![Blazor WASM](https://img.shields.io/badge/Blazor-WebAssembly-7B2FBE?style=for-the-badge&logo=blazor)](https://blazor.net)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.x-06B6D4?style=for-the-badge&logo=tailwindcss)](https://tailwindcss.com)
 [![SQL Server](https://img.shields.io/badge/SQL_Server-LocalDB-CC2927?style=for-the-badge&logo=microsoftsqlserver)](https://www.microsoft.com/sql-server)
-[![License: MIT](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
-
-[**Live Demo**](#demo-credentials) · [**Quick Start**](#quick-start) · [**API Docs**](#api-documentation) · [**White-Label**](#white-label-branding)
 
 ---
 
