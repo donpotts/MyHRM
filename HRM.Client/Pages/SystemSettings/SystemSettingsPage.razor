@@ -1,0 +1,137 @@
+@page "/system-settings"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@inject ApiService Api
+
+<PageTitle>System Settings</PageTitle>
+
+<TabContainer Tabs="settingsTabs" ActiveTab="@activeTab" OnTabChanged="t => activeTab = t" />
+
+<div class="bg-white rounded-b-lg border border-t-0 border-gray-200 p-4 sm:p-6">
+    @if (settings is null)
+    {
+        <div class="flex items-center justify-center h-32">
+            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+        </div>
+    }
+    else
+    {
+        @switch (activeTab)
+        {
+            case "Identity":
+                <PageHeader Title="Security & Identity" Subtitle="Security Policy & Default Credentials">
+                    <Breadcrumb><span>/ System / <strong>Security & Identity</strong></span></Breadcrumb>
+                </PageHeader>
+
+                @* Password Policy *@
+                <div class="mb-6">
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="text-lg font-semibold text-gray-800">Password Policy</h3>
+                        <span class="px-3 py-1 bg-green-600 text-white rounded text-xs font-bold uppercase">Configured</span>
+                    </div>
+                    <div class="bg-gray-50 rounded-lg border border-gray-200">
+                        <SettingRow Label="REQUIREDIGIT" Value="@settings.Identity.RequireDigit.ToString()" />
+                        <SettingRow Label="REQUIREDLENGTH" Value="@settings.Identity.RequiredLength.ToString()" />
+                        <SettingRow Label="REQUIRENONALPHANUMERIC" Value="@settings.Identity.RequireNonAlphanumeric.ToString()" />
+                        <SettingRow Label="REQUIREUPPERCASE" Value="@settings.Identity.RequireUppercase.ToString()" />
+                        <SettingRow Label="REQUIRELOWERCASE" Value="@settings.Identity.RequireLowercase.ToString()" />
+                        <SettingRow Label="REQUIREDUNIQUECHARS" Value="@settings.Identity.RequiredUniqueChars.ToString()" />
+                    </div>
+                </div>
+
+                @* Cookie Settings *@
+                <div class="mb-6">
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="text-lg font-semibold text-gray-800">Cookie Settings</h3>
+                        <span class="px-3 py-1 bg-green-600 text-white rounded text-xs font-bold uppercase">Configured</span>
+                    </div>
+                    <div class="bg-gray-50 rounded-lg border border-gray-200">
+                        <SettingRow Label="NAME" Value="@settings.Identity.CookieName" />
+                        <SettingRow Label="LOGINPATH" Value="@settings.Identity.LoginPath" />
+                        <SettingRow Label="LOGOUTPATH" Value="@settings.Identity.LogoutPath" />
+                        <SettingRow Label="ACCESSDENIEDPATH" Value="@settings.Identity.AccessDeniedPath" />
+                        <SettingRow Label="EXPIREDAYS" Value="@settings.Identity.ExpireDays.ToString()" />
+                    </div>
+                </div>
+
+                @* Default Admin *@
+                <div class="mb-6">
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="text-lg font-semibold text-gray-800">Default Admin</h3>
+                        <span class="px-3 py-1 bg-green-600 text-white rounded text-xs font-bold uppercase">Configured</span>
+                    </div>
+                    <div class="bg-gray-50 rounded-lg border border-gray-200">
+                        <SettingRow Label="EMAIL" Value="@settings.Identity.DefaultAdminEmail" />
+                        <SettingRow Label="PASSWORD" Value="@settings.Identity.DefaultAdminPassword" />
+                    </div>
+                </div>
+                break;
+
+            case "Database":
+                <PageHeader Title="Database Configuration" Subtitle="Database connection settings." />
+                <div class="bg-gray-50 rounded-lg border border-gray-200">
+                    <SettingRow Label="PROVIDER" Value="@settings.Database.Provider" />
+                    <SettingRow Label="SERVER" Value="@settings.Database.Server" />
+                    <SettingRow Label="DATABASE" Value="@settings.Database.DatabaseName" />
+                </div>
+                break;
+
+            case "Jobs":
+                <PageHeader Title="Background Jobs" Subtitle="Job processing configuration." />
+                <div class="bg-gray-50 rounded-lg border border-gray-200">
+                    <SettingRow Label="ENABLE BACKGROUND JOBS" Value="@settings.Jobs.EnableBackgroundJobs.ToString()" />
+                    <SettingRow Label="PAYROLL PROCESSING DAY" Value="@settings.Jobs.PayrollProcessingDay.ToString()" />
+                </div>
+                break;
+
+            case "Email":
+                <PageHeader Title="Email Configuration" Subtitle="SMTP and email delivery settings." />
+                <div class="bg-gray-50 rounded-lg border border-gray-200">
+                    <SettingRow Label="SMTP HOST" Value="@settings.Email.SmtpHost" />
+                    <SettingRow Label="SMTP PORT" Value="@settings.Email.SmtpPort.ToString()" />
+                    <SettingRow Label="FROM ADDRESS" Value="@settings.Email.FromAddress" />
+                    <SettingRow Label="ENABLE SSL" Value="@settings.Email.EnableSsl.ToString()" />
+                </div>
+                break;
+
+            case "Storage":
+                <PageHeader Title="File Storage" Subtitle="Avatar and file upload settings." />
+                <div class="bg-gray-50 rounded-lg border border-gray-200">
+                    <SettingRow Label="AVATAR PATH" Value="@settings.Storage.AvatarPath" />
+                    <SettingRow Label="MAX FILE SIZE" Value="@($"{settings.Storage.MaxFileSize:N0} bytes")" />
+                    <SettingRow Label="ALLOWED EXTENSIONS" Value="@settings.Storage.AllowedExtensions" />
+                </div>
+                break;
+
+            case "Logging":
+                <PageHeader Title="Logging Configuration" Subtitle="Application logging settings." />
+                <div class="bg-gray-50 rounded-lg border border-gray-200">
+                    <SettingRow Label="MINIMUM LEVEL" Value="@settings.Logging.MinimumLevel" />
+                    <SettingRow Label="DATABASE LOGGING" Value="@settings.Logging.EnableDatabaseLogging.ToString()" />
+                    <SettingRow Label="FILE LOGGING" Value="@settings.Logging.EnableFileLogging.ToString()" />
+                    <SettingRow Label="LOG FILE PATH" Value="@settings.Logging.LogFilePath" />
+                </div>
+                break;
+        }
+    }
+</div>
+
+@code {
+    private string activeTab = "Identity";
+    private Dictionary<string, string> settingsTabs = new()
+    {
+        ["Identity"] = "security",
+        ["Database"] = "storage",
+        ["Jobs"] = "schedule",
+        ["Email"] = "email",
+        ["Storage"] = "cloud_upload",
+        ["Logging"] = "receipt_long"
+    };
+
+    private SystemSettingsDto? settings;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var r = await Api.GetAsync<ApiResponse<SystemSettingsDto>>("/api/system-settings");
+        settings = r?.Data;
+    }
+}

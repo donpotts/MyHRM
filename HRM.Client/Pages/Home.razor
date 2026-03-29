@@ -1,0 +1,267 @@
+@page "/"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@inject ApiService Api
+@inject NavigationManager Nav
+
+<PageTitle>Home - Dashboard</PageTitle>
+
+@if (data is null)
+{
+    <div class="flex items-center justify-center h-64">
+        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+    </div>
+}
+else
+{
+    @* Header *@
+    <div class="bg-white rounded-lg p-4 sm:p-6 mb-6 border border-gray-200">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div>
+                <h1 class="text-xl sm:text-2xl font-bold text-gray-800">360&deg; EMPLOYEE VIEW <span class="text-green-500">HUB</span></h1>
+                <p class="text-sm text-gray-500 mt-1">PEOPLE ANALYTICS & TALENT ENGINE &bull; STATUS: ACTIVE</p>
+            </div>
+            <div class="flex gap-2 flex-wrap">
+                <span class="px-3 py-1 bg-white border border-gray-300 rounded text-sm font-medium">STAFF: @data.TotalStaff</span>
+                <span class="px-3 py-1 bg-indigo-600 text-white rounded text-sm font-medium">FTE: @data.AverageFTE.ToString("F2")</span>
+            </div>
+        </div>
+    </div>
+
+    @* KPI Cards *@
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+        <div class="bg-white p-4 border border-gray-200 rounded-lg border-t-4 border-t-blue-500">
+            <p class="text-xs font-medium text-gray-500 uppercase tracking-wide">Cost Per Hire</p>
+            <div class="mt-2 flex items-baseline gap-2 flex-wrap">
+                <span class="text-2xl sm:text-3xl font-bold text-gray-800">11.6K</span>
+                <span class="text-sm text-green-500 font-medium">ROI: 12%</span>
+            </div>
+        </div>
+        <div class="bg-white p-4 border border-gray-200 rounded-lg border-t-4 border-t-green-500">
+            <p class="text-xs font-medium text-gray-500 uppercase tracking-wide">Retention</p>
+            <div class="mt-2 flex items-baseline gap-2 flex-wrap">
+                <span class="text-2xl sm:text-3xl font-bold text-gray-800">@data.RetentionRate%</span>
+                <span class="text-xs text-gray-400">LEAVE: @data.LeaversRate%</span>
+            </div>
+        </div>
+        <div class="bg-white p-4 border border-gray-200 rounded-lg border-t-4 border-t-red-500">
+            <p class="text-xs font-medium text-gray-500 uppercase tracking-wide">Utilization</p>
+            <div class="mt-2">
+                <span class="text-2xl sm:text-3xl font-bold text-gray-800">@data.UtilizationRate%</span>
+            </div>
+        </div>
+        <div class="bg-white p-4 border border-gray-200 rounded-lg border-t-4 border-t-yellow-500">
+            <p class="text-xs font-medium text-gray-500 uppercase tracking-wide">Engagement</p>
+            <div class="mt-2 flex items-baseline gap-2">
+                <span class="text-2xl sm:text-3xl font-bold text-gray-800">@data.EngagementRate%</span>
+                <span class="text-indigo-500">&#x2197;</span>
+            </div>
+        </div>
+    </div>
+
+    @* Middle row: Pipeline, EX, Forecast *@
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+        @* Recruitment Pipeline *@
+        <div class="bg-white rounded-lg p-5 border border-gray-200">
+            <h3 class="font-semibold text-gray-800 mb-4 uppercase text-sm">Recruitment Pipeline</h3>
+            <div class="space-y-3">
+                <div>
+                    <div class="flex justify-between text-sm mb-1">
+                        <span class="text-gray-600">Sourced</span>
+                        <span class="font-medium">@data.Pipeline.Sourced Units</span>
+                    </div>
+                    <div class="w-full bg-gray-100 rounded-full h-2.5">
+                        <div class="bg-blue-500 h-2.5 rounded-full animate-progress" style="width: 100%"></div>
+                    </div>
+                </div>
+                <div>
+                    <div class="flex justify-between text-sm mb-1">
+                        <span class="text-gray-600">Interviewed</span>
+                        <span class="font-medium">@data.Pipeline.Interviewed Units</span>
+                    </div>
+                    <div class="w-full bg-gray-100 rounded-full h-2.5">
+                        <div class="bg-green-500 h-2.5 rounded-full animate-progress" style="width: @((data.Pipeline.Interviewed * 100 / Math.Max(1, data.Pipeline.Sourced)))%"></div>
+                    </div>
+                </div>
+                <div>
+                    <div class="flex justify-between text-sm mb-1">
+                        <span class="text-gray-600">Offered</span>
+                        <span class="font-medium">@data.Pipeline.Offered Units</span>
+                    </div>
+                    <div class="w-full bg-gray-100 rounded-full h-2.5">
+                        <div class="bg-orange-500 h-2.5 rounded-full animate-progress" style="width: @((data.Pipeline.Offered * 100 / Math.Max(1, data.Pipeline.Sourced)))%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @* Employee Experience *@
+        <div class="bg-white rounded-lg p-5 border border-gray-200">
+            <h3 class="font-semibold text-gray-800 mb-4 uppercase text-sm">Employee Experience (EX)</h3>
+            <div class="flex justify-around items-center h-32">
+                <div class="text-center">
+                    <svg viewBox="0 0 100 100" class="w-20 h-20">
+                        <circle cx="50" cy="50" r="40" fill="none" stroke="#e5e7eb" stroke-width="8"/>
+                        <circle cx="50" cy="50" r="40" fill="none" stroke="#06b6d4" stroke-width="8"
+                                stroke-dasharray="251" stroke-dashoffset="@((251 - 251 * (double)data.Experience.NPS / 10).ToString("F0"))"
+                                transform="rotate(-90 50 50)" stroke-linecap="round"/>
+                    </svg>
+                    <p class="text-sm text-gray-500 mt-1">NPS: @data.Experience.NPS</p>
+                </div>
+                <div class="text-center">
+                    <svg viewBox="0 0 100 100" class="w-20 h-20">
+                        <circle cx="50" cy="50" r="40" fill="none" stroke="#e5e7eb" stroke-width="8"/>
+                        <circle cx="50" cy="50" r="40" fill="none" stroke="#22c55e" stroke-width="8"
+                                stroke-dasharray="251" stroke-dashoffset="@((251 - 251 * (double)data.Experience.Satisfaction / 100).ToString("F0"))"
+                                transform="rotate(-90 50 50)" stroke-linecap="round"/>
+                    </svg>
+                    <p class="text-sm text-gray-500 mt-1">SAT: @data.Experience.Satisfaction%</p>
+                </div>
+            </div>
+        </div>
+
+        @* Headcount Forecast *@
+        <div class="bg-white rounded-lg p-5 border border-gray-200 md:col-span-2 lg:col-span-1">
+            <h3 class="font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                <span class="text-red-500">&#x1F4CD;</span>
+                <span class="uppercase text-sm">Headcount Forecast (Q4)</span>
+            </h3>
+            <p class="text-sm text-gray-600 leading-relaxed">
+                Based on current <span class="font-semibold text-gray-800">Manpower Planning</span>, the projected recruitment need for Q4 is
+                <span class="font-bold text-indigo-600">@data.Forecast.ProjectedFTE FTE</span>, focusing primarily on scaling the
+                <span class="font-semibold text-indigo-600">@data.Forecast.FocusDepartments</span> departments.
+            </p>
+            <div class="mt-4 flex items-center justify-between text-sm">
+                <span class="text-gray-500">TIME TO HIRE: <strong class="text-gray-800">@data.Forecast.TimeToHire DAYS</strong></span>
+                <span class="text-green-500 text-lg">&#x2197;</span>
+            </div>
+        </div>
+    </div>
+
+    @* Branch & Department row *@
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+        <div class="bg-white rounded-lg p-4 border border-gray-200 flex items-center gap-4">
+            <span class="material-icons-outlined text-3xl text-blue-500 flex-shrink-0">location_city</span>
+            <div>
+                <h3 class="font-semibold text-gray-800">Operational Branches</h3>
+                <p class="text-sm text-gray-500">Managing <strong class="text-indigo-600">@data.OperationalBranches</strong> active branches.</p>
+            </div>
+        </div>
+        <div class="bg-white rounded-lg p-4 border border-gray-200 flex items-center gap-4">
+            <span class="material-icons-outlined text-3xl text-purple-500 flex-shrink-0">account_tree</span>
+            <div>
+                <h3 class="font-semibold text-gray-800">Department Hierarchy</h3>
+                <p class="text-sm text-gray-500"><strong class="text-indigo-600">@data.Departments</strong> internal departments.</p>
+            </div>
+        </div>
+    </div>
+
+    @* Talent Scoring *@
+    <div class="bg-white rounded-lg p-4 sm:p-6 border border-gray-200 mb-6">
+        <div class="flex flex-col sm:flex-row sm:items-baseline gap-2 sm:gap-6 mb-4">
+            <div>
+                <h2 class="text-2xl sm:text-4xl font-black text-gray-800 tracking-tight">TALENT SCORING</h2>
+                <p class="text-xs text-gray-400 uppercase mt-1">People Data Platform (PDP) Insights</p>
+            </div>
+            <span class="text-sm font-medium text-gray-500 uppercase">Potential</span>
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div class="text-center">
+                <p class="text-xs text-gray-500 uppercase font-medium">Top Talent</p>
+                <p class="text-2xl sm:text-3xl font-bold text-orange-500">@data.Talent.TopTalent</p>
+            </div>
+            <div class="text-center">
+                <p class="text-xs text-gray-500 uppercase font-medium">Core Player</p>
+                <p class="text-2xl sm:text-3xl font-bold text-purple-500">@data.Talent.CorePlayer</p>
+            </div>
+            <div class="text-center">
+                <p class="text-xs text-gray-500 uppercase font-medium">Low Perf</p>
+                <p class="text-2xl sm:text-3xl font-bold text-gray-800">@data.Talent.LowPerf</p>
+            </div>
+            <div class="text-center">
+                <p class="text-xs text-gray-500 uppercase font-medium">Certified</p>
+                <p class="text-2xl sm:text-3xl font-bold text-green-500">@data.Talent.CertifiedPercent%</p>
+            </div>
+        </div>
+    </div>
+
+    @* Bottom row: Transfers & Leave *@
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="bg-white rounded-lg border border-gray-200">
+            <h3 class="font-semibold text-gray-800 uppercase text-sm p-4 border-b border-gray-200">Active Transfers</h3>
+            <div class="overflow-x-auto">
+                <table class="w-full min-w-[400px]">
+                    <thead>
+                        <tr class="text-left text-xs text-gray-500 uppercase border-b border-gray-100">
+                            <th class="px-4 py-2">Employee</th>
+                            <th class="px-4 py-2">Stage</th>
+                            <th class="px-4 py-2">Location</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var t in data.ActiveTransfers)
+                        {
+                            <tr class="border-b border-gray-50 hover:bg-gray-50">
+                                <td class="px-4 py-2 text-sm">@t.EmployeeName</td>
+                                <td class="px-4 py-2">
+                                    <span class="px-2 py-0.5 bg-yellow-100 text-yellow-700 rounded text-xs">@t.PipelineStage</span>
+                                </td>
+                                <td class="px-4 py-2 text-sm text-gray-600">@t.Location</td>
+                            </tr>
+                        }
+                        @if (!data.ActiveTransfers.Any())
+                        {
+                            <tr><td colspan="3" class="px-4 py-4 text-center text-sm text-gray-400">No active transfers</td></tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg border border-gray-200">
+            <h3 class="font-semibold text-gray-800 uppercase text-sm p-4 border-b border-gray-200">Leave Management (Pending)</h3>
+            <div class="overflow-x-auto">
+                <table class="w-full min-w-[360px]">
+                    <thead>
+                        <tr class="text-left text-xs text-gray-500 uppercase border-b border-gray-100">
+                            <th class="px-4 py-2">Request ID</th>
+                            <th class="px-4 py-2">Status</th>
+                            <th class="px-4 py-2">Due</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var l in data.PendingLeaves)
+                        {
+                            <tr class="border-b border-gray-50 hover:bg-gray-50">
+                                <td class="px-4 py-2 text-sm">@l.RequestId</td>
+                                <td class="px-4 py-2">
+                                    <span class="px-2 py-0.5 bg-yellow-100 text-yellow-700 rounded text-xs">@l.Status</span>
+                                </td>
+                                <td class="px-4 py-2 text-sm text-gray-600">@l.DueDate.ToString("MMM dd, yyyy")</td>
+                            </tr>
+                        }
+                        @if (!data.PendingLeaves.Any())
+                        {
+                            <tr><td colspan="3" class="px-4 py-4 text-center text-sm text-gray-400">No pending leaves</td></tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private DashboardData? data;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var status = await Api.GetAsync<ApiResponse<SetupStatusDto>>("/api/admin/status");
+        if (status?.Data?.IsNew == true)
+        {
+            Nav.NavigateTo("/setup");
+            return;
+        }
+        var result = await Api.GetAsync<ApiResponse<DashboardData>>("/api/dashboard");
+        data = result?.Data;
+    }
+}

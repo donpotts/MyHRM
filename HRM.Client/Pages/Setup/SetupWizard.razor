@@ -1,0 +1,451 @@
+@page "/setup"
+@layout HRM.Client.Layout.EmptyLayout
+@inject ApiService Api
+@inject NavigationManager Nav
+
+<div class="min-h-screen bg-slate-950 flex flex-col items-center justify-center px-6 py-12 relative overflow-hidden">
+    @* Background grid *@
+    <div class="absolute inset-0 grid-pattern opacity-30 pointer-events-none"></div>
+
+    @* Logo header *@
+    <div class="relative z-10 flex items-center gap-3 mb-12">
+        <svg width="40" height="40" viewBox="0 0 80 80" fill="none">
+            <path d="M20 10h20v15c5-3 12-3 17 0V10h20v25H62c3 5 3 12 0 17H77v25H52V62c-5 3-12 3-17 0v15H10V52h15c-3-5-3-12 0-17H10V10h10z" fill="#6366f1" opacity="0.9"/>
+        </svg>
+        <span class="text-2xl font-bold text-white tracking-wide">HRM</span>
+    </div>
+
+    @* ────────── Step: Mode picker ────────── *@
+    @if (step == "pick")
+    {
+        <div class="relative z-10 w-full max-w-3xl">
+            <div class="text-center mb-10">
+                <h1 class="text-4xl font-extrabold text-white">Welcome to HRM</h1>
+                <p class="text-gray-400 mt-3 text-lg">How would you like to get started?</p>
+            </div>
+
+            <div class="grid grid-cols-3 gap-5">
+                @* Demo Mode *@
+                <button @onclick='() => step = "demo-confirm"'
+                        class="group flex flex-col items-center gap-4 p-8 rounded-2xl border border-white/10 bg-white/5 hover:bg-indigo-600/20 hover:border-indigo-500/60 transition-all text-center cursor-pointer">
+                    <div class="w-14 h-14 rounded-2xl bg-indigo-500/20 flex items-center justify-center group-hover:bg-indigo-500/40 transition-colors">
+                        <span class="material-icons-outlined text-indigo-400 text-3xl">play_circle</span>
+                    </div>
+                    <div>
+                        <div class="text-lg font-bold text-white">Demo Mode</div>
+                        <div class="text-sm text-gray-400 mt-1 leading-relaxed">Load sample company with 30 employees, payroll, evaluations and more</div>
+                    </div>
+                    <span class="mt-auto px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-300 text-xs font-medium border border-indigo-500/30">Recommended</span>
+                </button>
+
+                @* New Company *@
+                <button @onclick='() => step = "company"'
+                        class="group flex flex-col items-center gap-4 p-8 rounded-2xl border border-white/10 bg-white/5 hover:bg-green-600/20 hover:border-green-500/60 transition-all text-center cursor-pointer">
+                    <div class="w-14 h-14 rounded-2xl bg-green-500/20 flex items-center justify-center group-hover:bg-green-500/40 transition-colors">
+                        <span class="material-icons-outlined text-green-400 text-3xl">business</span>
+                    </div>
+                    <div>
+                        <div class="text-lg font-bold text-white">New Company</div>
+                        <div class="text-sm text-gray-400 mt-1 leading-relaxed">Set up your own company from scratch with a guided wizard</div>
+                    </div>
+                    <span class="mt-auto px-3 py-1 rounded-full bg-green-500/20 text-green-300 text-xs font-medium border border-green-500/30">Custom</span>
+                </button>
+
+                @* Reset *@
+                <button @onclick='() => step = "reset-confirm"'
+                        class="group flex flex-col items-center gap-4 p-8 rounded-2xl border border-white/10 bg-white/5 hover:bg-red-600/20 hover:border-red-500/60 transition-all text-center cursor-pointer">
+                    <div class="w-14 h-14 rounded-2xl bg-red-500/20 flex items-center justify-center group-hover:bg-red-500/40 transition-colors">
+                        <span class="material-icons-outlined text-red-400 text-3xl">restart_alt</span>
+                    </div>
+                    <div>
+                        <div class="text-lg font-bold text-white">Reset Database</div>
+                        <div class="text-sm text-gray-400 mt-1 leading-relaxed">Wipe all data and return to a clean state, keeping only admin accounts</div>
+                    </div>
+                    <span class="mt-auto px-3 py-1 rounded-full bg-red-500/20 text-red-300 text-xs font-medium border border-red-500/30">Destructive</span>
+                </button>
+            </div>
+
+            @if (!string.IsNullOrEmpty(errorMessage))
+            {
+                <div class="mt-6 p-4 bg-red-900/40 border border-red-500/40 rounded-xl text-red-300 text-sm text-center">
+                    @errorMessage
+                </div>
+            }
+        </div>
+    }
+
+    @* ────────── Demo confirm ────────── *@
+    else if (step == "demo-confirm")
+    {
+        <div class="relative z-10 w-full max-w-md">
+            <div class="bg-white/5 border border-white/10 rounded-2xl p-8 text-center">
+                <div class="w-16 h-16 rounded-2xl bg-indigo-500/20 flex items-center justify-center mx-auto mb-5">
+                    <span class="material-icons-outlined text-indigo-400 text-4xl">play_circle</span>
+                </div>
+                <h2 class="text-2xl font-bold text-white mb-2">Load Demo Data?</h2>
+                <p class="text-gray-400 text-sm leading-relaxed mb-6">
+                    This will populate the database with <strong class="text-white">30 sample employees</strong>,
+                    5 branches, payroll records, performance evaluations, leave requests, and more.
+                </p>
+                <div class="bg-slate-900/60 rounded-xl p-4 mb-6 text-left space-y-2">
+                    @foreach (var item in new[]{"30 Employees across 5 branches","Performance evaluations & appraisals","Payroll records for March 2026","Leave requests & balances","Active transfer pipeline"})
+                    {
+                        <div class="flex items-center gap-2 text-sm text-gray-300">
+                            <span class="material-icons-outlined text-green-400 text-base">check_circle</span>
+                            @item
+                        </div>
+                    }
+                </div>
+                <div class="flex gap-3">
+                    <button @onclick='() => step = "pick"' class="flex-1 py-2.5 border border-white/20 rounded-xl text-sm text-gray-300 hover:bg-white/5 transition">Back</button>
+                    <button @onclick="LoadDemoData" class="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-700 rounded-xl text-sm font-semibold text-white transition">
+                        Load Demo Data
+                    </button>
+                </div>
+            </div>
+        </div>
+    }
+
+    @* ────────── New Company wizard ────────── *@
+    else if (step == "company")
+    {
+        <div class="relative z-10 w-full max-w-lg">
+            @* Step progress *@
+            <div class="flex items-center justify-center gap-2 mb-8">
+                @foreach (var (label, idx) in new[]{"Company","HQ Branch","Done"}.Select((l,i)=>(l,i)))
+                {
+                    var isActive  = companyStep == idx;
+                    var isDone    = companyStep > idx;
+                    <div class="flex items-center gap-2">
+                        <div class="flex items-center gap-1.5">
+                            <div class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all @(isDone ? "bg-green-500 text-white" : isActive ? "bg-indigo-500 text-white" : "bg-white/10 text-gray-400")">
+                                @if (isDone) { <span class="material-icons-outlined text-sm">check</span> }
+                                else { <span>@(idx+1)</span> }
+                            </div>
+                            <span class="text-xs font-medium @(isActive ? "text-white" : "text-gray-500")">@label</span>
+                        </div>
+                        @if (idx < 2) { <div class="w-12 h-px bg-white/10 mx-1"></div> }
+                    </div>
+                }
+            </div>
+
+            <div class="bg-white/5 border border-white/10 rounded-2xl p-8">
+                @* Step 0: Company info *@
+                @if (companyStep == 0)
+                {
+                    <div class="w-12 h-12 rounded-xl bg-green-500/20 flex items-center justify-center mb-5">
+                        <span class="material-icons-outlined text-green-400 text-2xl">domain</span>
+                    </div>
+                    <h2 class="text-xl font-bold text-white mb-1">Company Details</h2>
+                    <p class="text-gray-400 text-sm mb-6">Tell us about your organization</p>
+
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-400 uppercase tracking-wide mb-1.5">Company Name *</label>
+                            <input @bind="companyForm.CompanyName" class="w-full px-4 py-2.5 bg-slate-900 border border-white/10 rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:border-indigo-500"
+                                   placeholder="ACME Corporation" />
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-400 uppercase tracking-wide mb-1.5">Industry</label>
+                            <select @bind="companyForm.Industry" class="w-full px-4 py-2.5 bg-slate-900 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-indigo-500">
+                                <option value="">Select industry…</option>
+                                <option>Technology</option>
+                                <option>Finance</option>
+                                <option>Healthcare</option>
+                                <option>Manufacturing</option>
+                                <option>Retail</option>
+                                <option>Education</option>
+                                <option>Other</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-400 uppercase tracking-wide mb-1.5">Base Currency</label>
+                            <select @bind="companyForm.BaseCurrency" class="w-full px-4 py-2.5 bg-slate-900 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-indigo-500">
+                                <option value="USD">USD — US Dollar</option>
+                                <option value="EUR">EUR — Euro</option>
+                                <option value="GBP">GBP — British Pound</option>
+                                <option value="JPY">JPY — Japanese Yen</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-3 mt-8">
+                        <button @onclick='() => step = "pick"' class="flex-1 py-2.5 border border-white/20 rounded-xl text-sm text-gray-300 hover:bg-white/5 transition">Back</button>
+                        <button @onclick="() => { if (!string.IsNullOrWhiteSpace(companyForm.CompanyName)) companyStep = 1; }"
+                                class="flex-1 py-2.5 bg-green-600 hover:bg-green-700 rounded-xl text-sm font-semibold text-white transition">
+                            Next
+                        </button>
+                    </div>
+                }
+
+                @* Step 1: HQ Branch *@
+                else if (companyStep == 1)
+                {
+                    <div class="w-12 h-12 rounded-xl bg-blue-500/20 flex items-center justify-center mb-5">
+                        <span class="material-icons-outlined text-blue-400 text-2xl">location_city</span>
+                    </div>
+                    <h2 class="text-xl font-bold text-white mb-1">Headquarters</h2>
+                    <p class="text-gray-400 text-sm mb-6">Where is your main office located?</p>
+
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-400 uppercase tracking-wide mb-1.5">City *</label>
+                            <input @bind="companyForm.HeadquartersCity" class="w-full px-4 py-2.5 bg-slate-900 border border-white/10 rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:border-indigo-500"
+                                   placeholder="New York" />
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-400 uppercase tracking-wide mb-1.5">Country *</label>
+                            <input @bind="companyForm.HeadquartersCountry" class="w-full px-4 py-2.5 bg-slate-900 border border-white/10 rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:border-indigo-500"
+                                   placeholder="United States" />
+                        </div>
+                    </div>
+
+                    <div class="flex gap-3 mt-8">
+                        <button @onclick="() => companyStep = 0" class="flex-1 py-2.5 border border-white/20 rounded-xl text-sm text-gray-300 hover:bg-white/5 transition">Back</button>
+                        <button @onclick="SetupNewCompany"
+                                disabled="@loading"
+                                class="flex-1 py-2.5 bg-green-600 hover:bg-green-700 rounded-xl text-sm font-semibold text-white transition disabled:opacity-50">
+                            @(loading ? "Creating..." : "Create Company")
+                        </button>
+                    </div>
+                }
+
+                @* Step 2: Done *@
+                else if (companyStep == 2)
+                {
+                    <div class="text-center">
+                        <div class="w-16 h-16 rounded-full bg-green-500/20 flex items-center justify-center mx-auto mb-4">
+                            <span class="material-icons-outlined text-green-400 text-4xl">check_circle</span>
+                        </div>
+                        <h2 class="text-2xl font-bold text-white mb-2">Company Created!</h2>
+                        <p class="text-gray-400 text-sm mb-1">
+                            <strong class="text-white">@companyForm.CompanyName</strong> HQ has been set up in
+                            <strong class="text-white">@companyForm.HeadquartersCity</strong>.
+                        </p>
+                        <p class="text-gray-500 text-xs mb-8">You can now add branches, departments, and employees from the Organization module.</p>
+                        <button @onclick='() => Nav.NavigateTo("/", true)'
+                                class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 rounded-xl font-semibold text-white transition">
+                            Go to Dashboard
+                        </button>
+                    </div>
+                }
+            </div>
+
+            @if (!string.IsNullOrEmpty(errorMessage))
+            {
+                <div class="mt-4 p-3 bg-red-900/40 border border-red-500/40 rounded-xl text-red-300 text-sm text-center">@errorMessage</div>
+            }
+        </div>
+    }
+
+    @* ────────── Reset confirm ────────── *@
+    else if (step == "reset-confirm")
+    {
+        <div class="relative z-10 w-full max-w-md">
+            <div class="bg-white/5 border border-red-500/20 rounded-2xl p-8 text-center">
+                <div class="w-16 h-16 rounded-2xl bg-red-500/20 flex items-center justify-center mx-auto mb-5">
+                    <span class="material-icons-outlined text-red-400 text-4xl">warning</span>
+                </div>
+                <h2 class="text-2xl font-bold text-white mb-2">Reset Database?</h2>
+                <p class="text-gray-400 text-sm leading-relaxed mb-6">
+                    This will permanently delete <strong class="text-white">ALL company data</strong> — employees, payroll, evaluations, and more.
+                    Only the admin accounts will be preserved.
+                </p>
+
+                <div class="bg-red-950/40 border border-red-800/40 rounded-xl p-4 mb-6 text-left">
+                    <div class="text-xs font-bold text-red-400 uppercase tracking-wider mb-2">After reset you will keep:</div>
+                    @foreach (var item in new[]{"Admin account (admin@root.com)","HR account (hr@root.com)","Employee demo account (emp@root.com)","Currency settings & auto-numbers"})
+                    {
+                        <div class="flex items-center gap-2 text-sm text-gray-300 mt-1">
+                            <span class="material-icons-outlined text-green-400 text-base">check</span>
+                            @item
+                        </div>
+                    }
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-xs font-medium text-gray-400 uppercase tracking-wide mb-2 text-left">Then choose:</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button @onclick='() => resetMode = "clean"'
+                                class="px-3 py-2.5 rounded-xl border text-sm font-medium transition @(resetMode=="clean" ? "bg-red-600/30 border-red-500 text-white" : "border-white/10 text-gray-400 hover:border-white/25")">
+                            Clean State
+                        </button>
+                        <button @onclick='() => resetMode = "demo"'
+                                class="px-3 py-2.5 rounded-xl border text-sm font-medium transition @(resetMode=="demo" ? "bg-indigo-600/30 border-indigo-500 text-white" : "border-white/10 text-gray-400 hover:border-white/25")">
+                            Reset + Demo Data
+                        </button>
+                    </div>
+                </div>
+
+                <div class="flex gap-3">
+                    <button @onclick='() => step = "pick"' class="flex-1 py-2.5 border border-white/20 rounded-xl text-sm text-gray-300 hover:bg-white/5 transition">Cancel</button>
+                    <button @onclick="ExecuteReset" disabled="@loading"
+                            class="flex-1 py-2.5 bg-red-600 hover:bg-red-700 rounded-xl text-sm font-semibold text-white transition disabled:opacity-50">
+                        @(loading ? "Resetting..." : "Confirm Reset")
+                    </button>
+                </div>
+            </div>
+        </div>
+    }
+
+    @* ────────── Loading / progress state ────────── *@
+    else if (step == "loading")
+    {
+        <div class="relative z-10 w-full max-w-sm text-center">
+            <div class="w-20 h-20 rounded-full bg-indigo-500/20 flex items-center justify-center mx-auto mb-6">
+                <div class="animate-spin rounded-full h-10 w-10 border-4 border-indigo-500 border-t-transparent"></div>
+            </div>
+            <h2 class="text-2xl font-bold text-white mb-2">@loadingTitle</h2>
+            <p class="text-gray-400 text-sm mb-6">@loadingSubtitle</p>
+
+            @* Animated step list *@
+            <div class="text-left space-y-2 bg-white/5 border border-white/10 rounded-xl p-4">
+                @foreach (var (msg, done) in loadingSteps)
+                {
+                    <div class="flex items-center gap-2 text-sm @(done ? "text-gray-300" : "text-gray-500")">
+                        @if (done)
+                        {
+                            <span class="material-icons-outlined text-green-400 text-base">check_circle</span>
+                        }
+                        else
+                        {
+                            <span class="w-4 h-4 rounded-full border-2 border-gray-600 animate-pulse"></span>
+                        }
+                        @msg
+                    </div>
+                }
+            </div>
+        </div>
+    }
+
+    @* ────────── Done ────────── *@
+    else if (step == "done")
+    {
+        <div class="relative z-10 w-full max-w-sm text-center">
+            <div class="w-20 h-20 rounded-full bg-green-500/20 flex items-center justify-center mx-auto mb-6">
+                <span class="material-icons-outlined text-green-400 text-5xl">check_circle</span>
+            </div>
+            <h2 class="text-2xl font-bold text-white mb-2">@doneTitle</h2>
+            <p class="text-gray-400 text-sm mb-8">@doneSubtitle</p>
+            <button @onclick='() => Nav.NavigateTo("/", true)'
+                    class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 rounded-xl font-semibold text-white transition flex items-center justify-center gap-2">
+                <span class="material-icons-outlined text-lg">dashboard</span>
+                Go to Dashboard
+            </button>
+        </div>
+    }
+</div>
+
+@code {
+    private string step        = "pick";
+    private string resetMode   = "clean";
+    private int    companyStep = 0;
+    private bool   loading;
+    private string? errorMessage;
+
+    private string loadingTitle    = "Processing...";
+    private string loadingSubtitle = "Please wait.";
+    private string doneTitle    = "Done!";
+    private string doneSubtitle = "";
+
+    private NewCompanyRequest companyForm = new() { BaseCurrency = "USD" };
+
+    private List<(string Message, bool Done)> loadingSteps = [];
+
+    private async Task LoadDemoData()
+    {
+        step          = "loading";
+        loadingTitle  = "Loading Demo Data";
+        loadingSubtitle = "Seeding sample employees, payroll, and evaluations…";
+        loadingSteps  = [
+            ("Creating branches & departments", false),
+            ("Adding 30 sample employees",      false),
+            ("Generating payroll records",      false),
+            ("Seeding evaluations & leaves",    false),
+        ];
+        StateHasChanged();
+
+        await AnimateStep(0, 400);
+        await AnimateStep(1, 600);
+        await AnimateStep(2, 500);
+
+        var result = await Api.PostAsync<object, ApiResponse<string>>("/api/admin/load-demo", new { });
+        if (result?.IsSuccess == true)
+        {
+            await AnimateStep(3, 300);
+            doneTitle    = "Demo Data Loaded!";
+            doneSubtitle = "30 employees, payrolls, evaluations and more are ready.";
+            step = "done";
+        }
+        else
+        {
+            errorMessage = result?.Message ?? "Failed to load demo data.";
+            step = "demo-confirm";
+        }
+    }
+
+    private async Task SetupNewCompany()
+    {
+        if (string.IsNullOrWhiteSpace(companyForm.HeadquartersCity) ||
+            string.IsNullOrWhiteSpace(companyForm.HeadquartersCountry))
+        {
+            errorMessage = "City and country are required.";
+            return;
+        }
+
+        loading = true; errorMessage = null;
+        var result = await Api.PostAsync<NewCompanyRequest, ApiResponse<string>>("/api/admin/new-company", companyForm);
+        loading = false;
+
+        if (result?.IsSuccess == true) companyStep = 2;
+        else errorMessage = result?.Message ?? "Failed to create company.";
+    }
+
+    private async Task ExecuteReset()
+    {
+        loading      = true;
+        step         = "loading";
+        loadingTitle = "Resetting Database";
+        loadingSubtitle = "Dropping all company data…";
+        loadingSteps = [
+            ("Removing all company records", false),
+            ("Recreating database schema",   false),
+            ("Seeding admin accounts",       false),
+            (resetMode == "demo" ? "Loading demo data" : "Finalizing clean state", false),
+        ];
+        StateHasChanged();
+
+        await AnimateStep(0, 600);
+        await AnimateStep(1, 500);
+        await AnimateStep(2, 400);
+
+        var endpoint = resetMode == "demo" ? "/api/admin/reset-demo" : "/api/admin/reset";
+        var result = await Api.PostAsync<object, ApiResponse<string>>(endpoint, new { });
+        loading = false;
+
+        if (result?.IsSuccess == true)
+        {
+            await AnimateStep(3, 300);
+            doneTitle    = "Database Reset!";
+            doneSubtitle = resetMode == "demo"
+                ? "Database was reset and demo data has been loaded."
+                : "Database has been wiped. Choose your setup mode.";
+            step = "done";
+        }
+        else
+        {
+            errorMessage = result?.Message ?? "Reset failed.";
+            step = "reset-confirm";
+        }
+    }
+
+    private async Task AnimateStep(int index, int delayMs)
+    {
+        await Task.Delay(delayMs);
+        if (index < loadingSteps.Count)
+        {
+            loadingSteps[index] = (loadingSteps[index].Message, true);
+            StateHasChanged();
+        }
+    }
+}

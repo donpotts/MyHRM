@@ -1,0 +1,215 @@
+@page "/app-settings"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@inject ApiService Api
+@inject AuthService Auth
+@inject NavigationManager Nav
+
+<PageTitle>App Settings</PageTitle>
+
+<TabContainer Tabs="tabs" ActiveTab="@activeTab" OnTabChanged="t => { activeTab = t; }" />
+
+
+<div class="bg-white rounded-b-lg border border-t-0 border-gray-200 p-4 sm:p-6">
+    @switch (activeTab)
+    {
+        case "Users":
+            <PageHeader Title="User Management" Subtitle="Manage application users and roles.">
+                <Breadcrumb><span>/ App Settings / <strong>Users</strong></span></Breadcrumb>
+            </PageHeader>
+            @if (users is not null)
+            {
+                <div class="overflow-x-auto">
+                    <table class="w-full min-w-[400px]">
+                        <thead>
+                            <tr class="text-left text-xs text-gray-500 uppercase border-b border-gray-200">
+                                <th class="px-4 py-3">User</th>
+                                <th class="px-4 py-3">Email</th>
+                                <th class="px-4 py-3">Role</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var u in users)
+                            {
+                                <tr class="border-b border-gray-50 hover:bg-gray-50">
+                                    <td class="px-4 py-3">
+                                        <div class="flex items-center gap-2">
+                                            <div class="w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center text-white text-xs font-bold">
+                                                @u.FullName.FirstOrDefault()
+                                            </div>
+                                            <span class="text-sm font-medium">@u.FullName</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-4 py-3 text-sm">@u.Email</td>
+                                    <td class="px-4 py-3">
+                                        <span class="px-2 py-0.5 bg-indigo-100 text-indigo-700 rounded text-xs font-medium">@u.Role</span>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            break;
+
+        case "Currencies":
+            <PageHeader Title="Currency Management" Subtitle="Manage supported currencies." />
+            @if (currencies is not null)
+            {
+                <div class="overflow-x-auto">
+                    <table class="w-full min-w-[400px]">
+                        <thead>
+                            <tr class="text-left text-xs text-gray-500 uppercase border-b border-gray-200">
+                                <th class="px-4 py-3">Code</th>
+                                <th class="px-4 py-3">Name</th>
+                                <th class="px-4 py-3">Symbol</th>
+                                <th class="px-4 py-3">Default</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var c in currencies)
+                            {
+                                <tr class="border-b border-gray-50 hover:bg-gray-50">
+                                    <td class="px-4 py-3 text-sm font-mono font-bold">@c.Code</td>
+                                    <td class="px-4 py-3 text-sm">@c.Name</td>
+                                    <td class="px-4 py-3 text-sm text-lg">@c.Symbol</td>
+                                    <td class="px-4 py-3">@(c.IsDefault ? "Yes" : "")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            break;
+
+        case "Auto Number":
+            <PageHeader Title="Auto Number Configuration" Subtitle="Configure automatic numbering sequences." />
+            @if (autoNumbers is not null)
+            {
+                <div class="overflow-x-auto">
+                    <table class="w-full min-w-[400px]">
+                        <thead>
+                            <tr class="text-left text-xs text-gray-500 uppercase border-b border-gray-200">
+                                <th class="px-4 py-3">Entity</th>
+                                <th class="px-4 py-3">Prefix</th>
+                                <th class="px-4 py-3">Last Number</th>
+                                <th class="px-4 py-3">Format Length</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var a in autoNumbers)
+                            {
+                                <tr class="border-b border-gray-50 hover:bg-gray-50">
+                                    <td class="px-4 py-3 text-sm font-medium">@a.EntityName</td>
+                                    <td class="px-4 py-3 text-sm font-mono">@a.Prefix</td>
+                                    <td class="px-4 py-3 text-sm">@a.LastNumber</td>
+                                    <td class="px-4 py-3 text-sm">@a.NumberLength</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            break;
+
+        case "Branding":
+            <BrandingSettings />
+            break;
+
+        case "Maintenance":
+            <PageHeader Title="Database Maintenance" Subtitle="Manage seed data and reset the database." />
+            @if (!string.IsNullOrEmpty(maintMessage))
+            {
+                <div class="mb-6 p-4 rounded-lg border @(maintIsError ? "bg-red-50 border-red-200 text-red-700" : "bg-green-50 border-green-200 text-green-700") flex items-center gap-2">
+                    <span class="material-icons-outlined text-sm">@(maintIsError ? "error_outline" : "check_circle")</span>
+                    @maintMessage
+                </div>
+            }
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-2">
+                @* Load Demo Data *@
+                <div class="border border-gray-200 rounded-xl p-4 sm:p-6">
+                    <div class="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center mb-4">
+                        <span class="material-icons-outlined text-indigo-600">dataset</span>
+                    </div>
+                    <h3 class="font-semibold text-gray-800 mb-1">Load Demo Data</h3>
+                    <p class="text-sm text-gray-500 mb-4">Populates the database with 5 branches, 5 departments, 30 employees and all related records. Safe to run — skips if data already exists.</p>
+                    <button @onclick='() => RunMaintenance("load-demo")'
+                            disabled="@maintLoading"
+                            class="w-full py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition disabled:opacity-50">
+                        @(maintLoading && maintAction == "load-demo" ? "Loading..." : "Load Demo Data")
+                    </button>
+                </div>
+
+                @* Reset to Clean State *@
+                <div class="border border-red-200 rounded-xl p-4 sm:p-6">
+                    <div class="w-10 h-10 rounded-lg bg-red-100 flex items-center justify-center mb-4">
+                        <span class="material-icons-outlined text-red-600">restart_alt</span>
+                    </div>
+                    <h3 class="font-semibold text-gray-800 mb-1">Reset to Clean State</h3>
+                    <p class="text-sm text-gray-500 mb-4">Drops and recreates the database, then seeds only roles and demo user accounts. All company data will be erased.</p>
+                    <button @onclick='() => RunMaintenance("reset")'
+                            disabled="@maintLoading"
+                            class="w-full py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition disabled:opacity-50">
+                        @(maintLoading && maintAction == "reset" ? "Resetting..." : "Reset Clean")
+                    </button>
+                </div>
+
+                @* Reset + Demo Data *@
+                <div class="border border-orange-200 rounded-xl p-4 sm:p-6">
+                    <div class="w-10 h-10 rounded-lg bg-orange-100 flex items-center justify-center mb-4">
+                        <span class="material-icons-outlined text-orange-600">auto_awesome</span>
+                    </div>
+                    <h3 class="font-semibold text-gray-800 mb-1">Reset + Demo Data</h3>
+                    <p class="text-sm text-gray-500 mb-4">Full reset followed by loading all demo data. Use this to restore the application to its showcase state.</p>
+                    <button @onclick='() => RunMaintenance("reset-demo")'
+                            disabled="@maintLoading"
+                            class="w-full py-2 bg-orange-500 text-white rounded-lg text-sm font-medium hover:bg-orange-600 transition disabled:opacity-50">
+                        @(maintLoading && maintAction == "reset-demo" ? "Processing..." : "Reset + Load Demo")
+                    </button>
+                </div>
+            </div>
+            break;
+    }
+</div>
+
+@code {
+    private string activeTab = "Users";
+    private Dictionary<string, string> tabs = new();
+
+    private List<UserInfo>? users;
+    private List<Currency>? currencies;
+    private List<AutoNumber>? autoNumbers;
+
+    private bool maintLoading;
+    private string? maintAction;
+    private string? maintMessage;
+    private bool maintIsError;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var user = await Auth.GetUserInfoAsync();
+        tabs = new()
+        {
+            ["Users"]     = "people",
+            ["Currencies"]= "attach_money",
+            ["Auto Number"]="pin",
+        };
+        if (user?.Role == "Super Admin")
+            tabs["Branding"] = "palette";
+        tabs["Maintenance"] = "build";
+
+        users = (await Api.GetAsync<ApiResponse<List<UserInfo>>>("/api/users"))?.Data;
+        currencies = (await Api.GetAsync<ApiResponse<List<Currency>>>("/api/currencies"))?.Data;
+        autoNumbers = (await Api.GetAsync<ApiResponse<List<AutoNumber>>>("/api/auto-numbers"))?.Data;
+    }
+
+    private async Task RunMaintenance(string action)
+    {
+        maintLoading = true; maintAction = action; maintMessage = null;
+        var result = await Api.PostAsync<object, ApiResponse<string>>($"/api/admin/{action}", new());
+        maintIsError = result?.IsSuccess != true;
+        maintMessage = result?.Message ?? (maintIsError ? "Operation failed." : "Done.");
+        maintLoading = false; maintAction = null;
+        if (!maintIsError && action is "reset" or "reset-demo")
+            Nav.NavigateTo("/setup", true);
+    }
+}

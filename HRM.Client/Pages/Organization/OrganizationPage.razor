@@ -1,0 +1,187 @@
+@page "/organization"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@inject ApiService Api
+
+<PageTitle>Organization</PageTitle>
+
+<TabContainer Tabs="tabs" ActiveTab="@activeTab" OnTabChanged="t => { activeTab = t; _ = LoadTab(); }" />
+
+<div class="bg-white rounded-b-lg border border-t-0 border-gray-200 p-4">
+    @switch (activeTab)
+    {
+        case "Branches":
+            <PageHeader Title="Branch Management" Subtitle="Manage company branch offices and locations.">
+                <Breadcrumb><span>/ Organization / <strong>Branches</strong></span></Breadcrumb>
+            </PageHeader>
+            @if (branches is not null)
+            {
+                <div class="overflow-x-auto">
+                    <table class="w-full min-w-[500px]">
+                        <thead>
+                            <tr class="text-left text-xs text-gray-500 uppercase border-b border-gray-200">
+                                <th class="px-4 py-3">Name</th>
+                                <th class="px-4 py-3">City</th>
+                                <th class="px-4 py-3">Country</th>
+                                <th class="px-4 py-3">Phone</th>
+                                <th class="px-4 py-3">Email</th>
+                                <th class="px-4 py-3">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var b in branches)
+                            {
+                                <tr class="border-b border-gray-50 hover:bg-gray-50">
+                                    <td class="px-4 py-3 text-sm font-medium">@b.Name</td>
+                                    <td class="px-4 py-3 text-sm">@b.City</td>
+                                    <td class="px-4 py-3 text-sm">@b.Country</td>
+                                    <td class="px-4 py-3 text-sm whitespace-nowrap">@b.Phone</td>
+                                    <td class="px-4 py-3 text-sm">@b.Email</td>
+                                    <td class="px-4 py-3"><span class="px-2 py-0.5 bg-green-100 text-green-700 rounded text-xs">Active</span></td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            break;
+
+        case "Departments":
+            <PageHeader Title="Department Management" Subtitle="Manage organizational departments." />
+            @if (departments is not null)
+            {
+                <div class="overflow-x-auto">
+                    <table class="w-full min-w-[400px]">
+                        <thead>
+                            <tr class="text-left text-xs text-gray-500 uppercase border-b border-gray-200">
+                                <th class="px-4 py-3">Name</th>
+                                <th class="px-4 py-3">Branch</th>
+                                <th class="px-4 py-3">Description</th>
+                                <th class="px-4 py-3">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var d in departments)
+                            {
+                                <tr class="border-b border-gray-50 hover:bg-gray-50">
+                                    <td class="px-4 py-3 text-sm font-medium">@d.Name</td>
+                                    <td class="px-4 py-3 text-sm">@d.Branch?.Name</td>
+                                    <td class="px-4 py-3 text-sm text-gray-500">@d.Description</td>
+                                    <td class="px-4 py-3"><span class="px-2 py-0.5 bg-green-100 text-green-700 rounded text-xs">Active</span></td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            break;
+
+        case "Designations":
+            <PageHeader Title="Designation Management" Subtitle="Manage job titles and levels." />
+            @if (designations is not null)
+            {
+                <div class="overflow-x-auto">
+                    <table class="w-full min-w-[300px]">
+                        <thead>
+                            <tr class="text-left text-xs text-gray-500 uppercase border-b border-gray-200">
+                                <th class="px-4 py-3">Name</th>
+                                <th class="px-4 py-3">Level</th>
+                                <th class="px-4 py-3">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var d in designations)
+                            {
+                                <tr class="border-b border-gray-50 hover:bg-gray-50">
+                                    <td class="px-4 py-3 text-sm font-medium">@d.Name</td>
+                                    <td class="px-4 py-3 text-sm">@d.Level</td>
+                                    <td class="px-4 py-3"><span class="px-2 py-0.5 bg-green-100 text-green-700 rounded text-xs">Active</span></td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            break;
+
+        case "Employees":
+            <PageHeader Title="Employee Directory" Subtitle="Browse and manage all employees." />
+            <div class="flex items-center gap-2 mb-4">
+                <input @bind="empSearch" @bind:event="oninput" placeholder="Search..." class="px-3 py-2 border border-gray-300 rounded-lg text-sm w-full sm:w-48" />
+                <button @onclick="LoadEmployees" class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium whitespace-nowrap">Search</button>
+            </div>
+            @if (employees?.Items is not null)
+            {
+                <div class="overflow-x-auto">
+                    <table class="w-full min-w-[550px]">
+                        <thead>
+                            <tr class="text-left text-xs text-gray-500 uppercase border-b border-gray-200">
+                                <th class="px-4 py-3">Code</th>
+                                <th class="px-4 py-3">Name</th>
+                                <th class="px-4 py-3">Department</th>
+                                <th class="px-4 py-3">Designation</th>
+                                <th class="px-4 py-3">Branch</th>
+                                <th class="px-4 py-3">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var e in employees.Items)
+                            {
+                                <tr class="border-b border-gray-50 hover:bg-gray-50">
+                                    <td class="px-4 py-3 text-sm font-mono">@e.EmployeeCode</td>
+                                    <td class="px-4 py-3 text-sm font-medium">@e.FullName</td>
+                                    <td class="px-4 py-3 text-sm">@e.Department?.Name</td>
+                                    <td class="px-4 py-3 text-sm">@e.Designation?.Name</td>
+                                    <td class="px-4 py-3 text-sm">@e.Branch?.Name</td>
+                                    <td class="px-4 py-3">
+                                        <span class="px-2 py-0.5 rounded text-xs font-medium @(e.Status == EmploymentStatus.Active ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-600")">
+                                            @e.Status
+                                        </span>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                <Pagination Page="empPage" PageSize="empPageSize" TotalCount="employees.TotalCount"
+                            PageChanged="p => { empPage = p; _ = LoadEmployees(); }" PageSizeChanged="s => { empPageSize = s; empPage = 1; _ = LoadEmployees(); }" />
+            }
+            break;
+    }
+</div>
+
+@code {
+    private string activeTab = "Branches";
+    private Dictionary<string, string> tabs = new()
+    {
+        ["Branches"] = "location_city",
+        ["Departments"] = "account_tree",
+        ["Designations"] = "badge",
+        ["Employees"] = "people"
+    };
+
+    private List<Branch>? branches;
+    private List<Department>? departments;
+    private List<Designation>? designations;
+    private PagedResult<Employee>? employees;
+    private string empSearch = "";
+    private int empPage = 1, empPageSize = 5;
+
+    protected override async Task OnInitializedAsync() => await LoadTab();
+
+    private async Task LoadTab()
+    {
+        switch (activeTab)
+        {
+            case "Branches": branches = (await Api.GetAsync<ApiResponse<List<Branch>>>("/api/branches"))?.Data; break;
+            case "Departments": departments = (await Api.GetAsync<ApiResponse<List<Department>>>("/api/departments"))?.Data; break;
+            case "Designations": designations = (await Api.GetAsync<ApiResponse<List<Designation>>>("/api/designations"))?.Data; break;
+            case "Employees": await LoadEmployees(); break;
+        }
+    }
+
+    private async Task LoadEmployees()
+    {
+        var r = await Api.GetAsync<ApiResponse<PagedResult<Employee>>>($"/api/employees?page={empPage}&pageSize={empPageSize}&search={empSearch}");
+        employees = r?.Data;
+    }
+}

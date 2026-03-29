@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="HRM.Client/HRM.Client.csproj" />
+  <Project Path="HRM.Server/HRM.Server.csproj" />
+  <Project Path="HRM.Shared/HRM.Shared.csproj" />
+</Solution>

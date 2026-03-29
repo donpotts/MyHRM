@@ -1,0 +1,150 @@
+@page "/leave"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@inject ApiService Api
+
+<PageTitle>Leave Management</PageTitle>
+
+<TabContainer Tabs="tabs" ActiveTab="@activeTab" OnTabChanged="t => { activeTab = t; }" />
+
+<div class="bg-white rounded-b-lg border border-t-0 border-gray-200">
+    @switch (activeTab)
+    {
+        case "Leave Requests":
+            <div class="p-4">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
+                    <div class="flex items-center gap-2">
+                        <input @bind="search" @bind:event="oninput" placeholder="Search..." class="px-3 py-2 border border-gray-300 rounded-lg text-sm w-full sm:w-48" />
+                        <button @onclick="Load" class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium whitespace-nowrap">Search</button>
+                    </div>
+                    <div class="flex gap-2">
+                        <button class="px-3 py-2 border border-green-500 text-green-600 rounded-lg text-sm font-medium hover:bg-green-50 flex items-center gap-1">
+                            <span class="material-icons-outlined text-sm">description</span>
+                            <span class="hidden sm:inline">Export Excel</span>
+                        </button>
+                        <button @onclick="() => Load()" class="px-3 py-2 border border-gray-300 rounded-lg text-sm flex items-center gap-1 hover:bg-gray-50">
+                            <span class="material-icons-outlined text-sm">refresh</span>
+                            <span class="hidden sm:inline">Refresh</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full min-w-[600px]">
+                        <thead>
+                            <tr class="text-left text-xs text-gray-500 uppercase border-b border-gray-200">
+                                <th class="px-4 py-3">Employee</th>
+                                <th class="px-4 py-3">Category</th>
+                                <th class="px-4 py-3">Start</th>
+                                <th class="px-4 py-3">End</th>
+                                <th class="px-4 py-3">Days</th>
+                                <th class="px-4 py-3">Status</th>
+                                <th class="px-4 py-3">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (requests?.Items is not null)
+                            {
+                                @foreach (var lr in requests.Items)
+                                {
+                                    <tr class="border-b border-gray-50 hover:bg-gray-50">
+                                        <td class="px-4 py-3 text-sm">@lr.Employee?.FullName</td>
+                                        <td class="px-4 py-3 text-sm">@lr.LeaveCategory?.Name</td>
+                                        <td class="px-4 py-3 text-sm whitespace-nowrap">@lr.StartDate.ToString("MMM dd, yyyy")</td>
+                                        <td class="px-4 py-3 text-sm whitespace-nowrap">@lr.EndDate.ToString("MMM dd, yyyy")</td>
+                                        <td class="px-4 py-3 text-sm">@lr.TotalDays</td>
+                                        <td class="px-4 py-3">
+                                            <span class="px-2 py-0.5 rounded text-xs font-medium @StatusColor(lr.Status)">@lr.Status</span>
+                                        </td>
+                                        <td class="px-4 py-3">
+                                            @if (lr.Status == LeaveStatus.Pending)
+                                            {
+                                                <button @onclick="() => Approve(lr.Id)" class="text-green-600 hover:underline text-xs mr-2">Approve</button>
+                                                <button @onclick="() => Reject(lr.Id)" class="text-red-600 hover:underline text-xs">Reject</button>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                @if (requests is not null)
+                {
+                    <Pagination Page="page" PageSize="pageSize" TotalCount="requests.TotalCount"
+                                PageChanged="p => { page = p; _ = Load(); }" PageSizeChanged="s => { pageSize = s; page = 1; _ = Load(); }" />
+                }
+            </div>
+            break;
+
+        case "Leave Categories":
+            <div class="p-4 sm:p-6">
+                @if (categories is not null)
+                {
+                    <div class="overflow-x-auto">
+                        <table class="w-full min-w-[400px]">
+                            <thead>
+                                <tr class="text-left text-xs text-gray-500 uppercase border-b border-gray-200">
+                                    <th class="px-4 py-3">Name</th>
+                                    <th class="px-4 py-3">Description</th>
+                                    <th class="px-4 py-3">Max Days/Year</th>
+                                    <th class="px-4 py-3">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var cat in categories)
+                                {
+                                    <tr class="border-b border-gray-50 hover:bg-gray-50">
+                                        <td class="px-4 py-3 text-sm font-medium">@cat.Name</td>
+                                        <td class="px-4 py-3 text-sm text-gray-500">@cat.Description</td>
+                                        <td class="px-4 py-3 text-sm">@cat.MaxDaysPerYear</td>
+                                        <td class="px-4 py-3"><span class="px-2 py-0.5 bg-green-100 text-green-700 rounded text-xs">Active</span></td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+            break;
+
+        case "Leave Balance":
+            <div class="p-4 sm:p-6 text-center text-gray-400 text-sm">Select an employee to view leave balances.</div>
+            break;
+    }
+</div>
+
+@code {
+    private string activeTab = "Leave Requests";
+    private Dictionary<string, string> tabs = new()
+    {
+        ["Leave Requests"] = "event_note",
+        ["Leave Categories"] = "category",
+        ["Leave Balance"] = "account_balance_wallet"
+    };
+
+    private PagedResult<LeaveRequest>? requests;
+    private List<LeaveCategory>? categories;
+    private string search = "";
+    private int page = 1, pageSize = 5;
+
+    protected override async Task OnInitializedAsync() => await Load();
+
+    private async Task Load()
+    {
+        var r = await Api.GetAsync<ApiResponse<PagedResult<LeaveRequest>>>($"/api/leave-requests?page={page}&pageSize={pageSize}&search={search}");
+        requests = r?.Data;
+        var c = await Api.GetAsync<ApiResponse<List<LeaveCategory>>>("/api/leave-categories");
+        categories = c?.Data;
+    }
+
+    private async Task Approve(int id) { await Api.PutAsync<object, ApiResponse<LeaveRequest>>($"/api/leave-requests/{id}/approve", new { }); await Load(); }
+    private async Task Reject(int id) { await Api.PutAsync<object, ApiResponse<LeaveRequest>>($"/api/leave-requests/{id}/reject", new { }); await Load(); }
+
+    private string StatusColor(LeaveStatus s) => s switch
+    {
+        LeaveStatus.Pending => "bg-yellow-100 text-yellow-700",
+        LeaveStatus.Approved => "bg-green-100 text-green-700",
+        LeaveStatus.Rejected => "bg-red-100 text-red-700",
+        _ => "bg-gray-100 text-gray-600"
+    };
+}

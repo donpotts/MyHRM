@@ -1,0 +1,9 @@
+<div class="flex items-center justify-between px-6 py-3 border-b border-gray-200 last:border-b-0">
+    <span class="text-xs font-bold text-gray-600 uppercase tracking-wider">@Label</span>
+    <span class="text-sm text-gray-800 font-mono">@Value</span>
+</div>
+
+@code {
+    [Parameter] public string Label { get; set; } = "";
+    [Parameter] public string Value { get; set; } = "";
+}

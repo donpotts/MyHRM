@@ -1,0 +1,308 @@
+@inject BrandingService Branding
+@inject ApiService Api
+@inject AuthService Auth
+
+@if (!isSuperAdmin)
+{
+    <div class="text-center py-12 text-gray-400">
+        <span class="material-icons-outlined text-4xl mb-2 block">lock</span>
+        <p class="text-sm">Branding configuration is restricted to Super Admin.</p>
+    </div>
+}
+else
+{
+    <PageHeader Title="Company Branding" Subtitle="Customize how your company appears across the application. Changes apply immediately to all users." />
+
+    @if (!string.IsNullOrEmpty(saveMessage))
+    {
+        <div class="mb-5 p-3 rounded-lg border @(saveOk ? "bg-green-50 border-green-200 text-green-700" : "bg-red-50 border-red-200 text-red-700") flex items-center gap-2 text-sm">
+            <span class="material-icons-outlined text-base">@(saveOk ? "check_circle" : "error_outline")</span>
+            @saveMessage
+        </div>
+    }
+
+    <div class="grid grid-cols-1 xl:grid-cols-2 gap-8">
+
+        @* ── Left: fields + uploads ── *@
+        <div class="space-y-6">
+
+            @* ── Text fields ── *@
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1.5">Company Name</label>
+                    <input @bind="draft.CompanyName" @bind:event="oninput"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                           placeholder="Acme Corp" maxlength="60" />
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1.5">Tagline</label>
+                    <input @bind="draft.CompanyTagline" @bind:event="oninput"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                           placeholder="Human Resources" maxlength="60" />
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1.5">App Title</label>
+                    <input @bind="draft.AppTitle" @bind:event="oninput"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                           placeholder="Human Resource Management" maxlength="80" />
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1.5">Logo Monogram</label>
+                    <input @bind="draft.LogoText" @bind:event="oninput"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent font-mono uppercase"
+                           placeholder="HR" maxlength="4" />
+                    <p class="text-xs text-gray-400 mt-1">Used as the icon badge when no logo image is uploaded.</p>
+                </div>
+            </div>
+
+            @* ── Image uploads ── *@
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+                @* Logo upload *@
+                <div>
+                    <p class="text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">Logo Image</p>
+                    <div class="border-2 border-dashed border-gray-200 rounded-xl p-4 text-center bg-gray-50 dark:bg-slate-800/50">
+                        <div class="w-16 h-16 mx-auto mb-3 rounded-xl bg-white border border-gray-200 flex items-center justify-center overflow-hidden shadow-sm">
+                            @if (!string.IsNullOrWhiteSpace(draft.LogoUrl))
+                            {
+                                <img src="@draft.LogoUrl" class="w-full h-full object-contain p-1" alt="logo"
+                                     onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" />
+                                <div class="w-full h-full hidden items-center justify-center bg-indigo-600 rounded-xl">
+                                    <span class="text-white text-xs font-extrabold">@MonogramPreview</span>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="w-full h-full flex items-center justify-center bg-indigo-600 rounded-xl">
+                                    <span class="text-white text-xs font-extrabold">@MonogramPreview</span>
+                                </div>
+                            }
+                        </div>
+                        <p class="text-xs text-gray-500 mb-2">Square PNG, SVG or JPG</p>
+                        <p class="text-xs text-gray-400 mb-3">Max 2MB · Used in sidebar &amp; login</p>
+                        <InputFile OnChange="UploadLogo" accept=".png,.jpg,.jpeg,.svg,.gif"
+                                   class="block w-full text-xs text-gray-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-medium file:bg-indigo-50 file:text-indigo-600 hover:file:bg-indigo-100 cursor-pointer" />
+                        @if (logoUploading)
+                        {
+                            <p class="text-xs text-indigo-500 mt-2 flex items-center justify-center gap-1">
+                                <span class="material-icons-outlined text-sm animate-spin">autorenew</span> Uploading...
+                            </p>
+                        }
+                        @if (!string.IsNullOrEmpty(logoMsg))
+                        {
+                            <p class="text-xs mt-2 @(logoOk ? "text-green-600" : "text-red-600")">@logoMsg</p>
+                        }
+                    </div>
+                </div>
+
+                @* Favicon upload *@
+                <div>
+                    <p class="text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">Favicon</p>
+                    <div class="border-2 border-dashed border-gray-200 rounded-xl p-4 text-center bg-gray-50 dark:bg-slate-800/50">
+                        <div class="w-16 h-16 mx-auto mb-3 rounded-xl bg-white border border-gray-200 flex items-center justify-center overflow-hidden shadow-sm">
+                            @if (!string.IsNullOrWhiteSpace(draft.FaviconUrl))
+                            {
+                                <img src="@draft.FaviconUrl" class="w-10 h-10 object-contain" alt="favicon"
+                                     onerror="this.style.display='none';this.nextElementSibling.style.display='block'" />
+                                <span class="material-icons-outlined text-gray-300 text-2xl hidden">image</span>
+                            }
+                            else
+                            {
+                                <span class="material-icons-outlined text-gray-300 text-2xl">tab</span>
+                            }
+                        </div>
+                        <p class="text-xs text-gray-500 mb-2">ICO, PNG or SVG</p>
+                        <p class="text-xs text-gray-400 mb-3">Max 2MB · Shown in browser tab</p>
+                        <InputFile OnChange="UploadFavicon" accept=".ico,.png,.svg"
+                                   class="block w-full text-xs text-gray-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-medium file:bg-indigo-50 file:text-indigo-600 hover:file:bg-indigo-100 cursor-pointer" />
+                        @if (faviconUploading)
+                        {
+                            <p class="text-xs text-indigo-500 mt-2 flex items-center justify-center gap-1">
+                                <span class="material-icons-outlined text-sm animate-spin">autorenew</span> Uploading...
+                            </p>
+                        }
+                        @if (!string.IsNullOrEmpty(faviconMsg))
+                        {
+                            <p class="text-xs mt-2 @(faviconOk ? "text-green-600" : "text-red-600")">@faviconMsg</p>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex gap-3 pt-1">
+                <button @onclick="Save" disabled="@saving"
+                        class="px-5 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition disabled:opacity-50 flex items-center gap-2">
+                    @if (saving) { <span class="material-icons-outlined text-sm animate-spin">autorenew</span> } else { <span class="material-icons-outlined text-sm">save</span> }
+                    @(saving ? "Saving..." : "Save Branding")
+                </button>
+                <button @onclick="ResetToDefaults" class="px-4 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 transition">
+                    Reset to Defaults
+                </button>
+            </div>
+        </div>
+
+        @* ── Right: live preview ── *@
+        <div>
+            <p class="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3">Live Preview</p>
+            <div class="border border-gray-200 rounded-xl overflow-hidden shadow-sm">
+
+                @* Sidebar brand *@
+                <div class="bg-white dark:bg-slate-800 px-4 py-3 border-b border-gray-100 dark:border-slate-700">
+                    <p class="text-xs text-gray-400 mb-2 uppercase tracking-wide">Sidebar</p>
+                    <div class="flex items-center gap-3">
+                        @if (!string.IsNullOrWhiteSpace(draft.LogoUrl))
+                        {
+                            <img src="@draft.LogoUrl" class="w-9 h-9 rounded-lg object-contain flex-shrink-0 border border-gray-100" alt="logo"
+                                 onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" />
+                            <div class="w-9 h-9 rounded-lg bg-indigo-600 items-center justify-center flex-shrink-0 text-white text-xs font-extrabold" style="display:none">
+                                @MonogramPreview
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="w-9 h-9 rounded-lg bg-indigo-600 flex items-center justify-center flex-shrink-0">
+                                <span class="text-white text-xs font-extrabold">@MonogramPreview</span>
+                            </div>
+                        }
+                        <div>
+                            <div class="font-extrabold text-sm text-gray-900 dark:text-white leading-tight">@(NotEmpty(draft.CompanyName, "Company Name"))</div>
+                            <div class="text-xs text-gray-400 leading-tight">@(NotEmpty(draft.CompanyTagline, "Tagline"))</div>
+                        </div>
+                    </div>
+                </div>
+
+                @* Top bar *@
+                <div class="bg-gradient-to-r from-indigo-600 to-purple-600 px-4 py-3 flex items-center gap-3">
+                    <span class="material-icons-outlined text-white text-xl">menu</span>
+                    <span class="text-white text-sm font-semibold truncate">@(NotEmpty(draft.AppTitle, "App Title"))</span>
+                    <div class="ml-auto flex items-center gap-2">
+                        @if (!string.IsNullOrWhiteSpace(draft.FaviconUrl))
+                        {
+                            <img src="@draft.FaviconUrl" class="w-4 h-4 object-contain opacity-80" alt="favicon" />
+                        }
+                        <span class="text-white/60 text-xs">Tab icon →</span>
+                    </div>
+                </div>
+
+                @* Login panel *@
+                <div class="bg-indigo-950 px-4 py-6 text-center">
+                    <p class="text-xs text-indigo-400/50 mb-4 uppercase tracking-wide">Login Screen</p>
+                    <div class="inline-flex w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-600 items-center justify-center mb-4 shadow-lg overflow-hidden">
+                        @if (!string.IsNullOrWhiteSpace(draft.LogoUrl))
+                        {
+                            <img src="@draft.LogoUrl" class="w-9 h-9 object-contain" alt="logo"
+                                 onerror="this.style.display='none';this.nextElementSibling.style.display='block'" />
+                            <span class="material-icons-outlined text-white text-2xl hidden">corporate_fare</span>
+                        }
+                        else
+                        {
+                            <span class="material-icons-outlined text-white text-2xl">corporate_fare</span>
+                        }
+                    </div>
+                    <p class="text-white font-bold text-lg">@(NotEmpty(draft.CompanyName, "Company Name"))</p>
+                    <p class="text-indigo-300/70 text-xs mt-1 uppercase tracking-wide">@(NotEmpty(draft.AppTitle, "App Title"))</p>
+                </div>
+            </div>
+            <p class="text-xs text-gray-400 text-center mt-2">Preview updates as you type. Image uploads apply immediately.</p>
+        </div>
+    </div>
+}
+
+@code {
+    private CompanyBrandingDto draft = new();
+    private bool isSuperAdmin;
+    private bool saving;
+    private string? saveMessage;
+    private bool saveOk;
+    private bool logoUploading, faviconUploading;
+    private string? logoMsg, faviconMsg;
+    private bool logoOk, faviconOk;
+
+    private string MonogramPreview => string.IsNullOrWhiteSpace(draft.LogoText)
+        ? "HR"
+        : draft.LogoText.ToUpper()[..Math.Min(4, draft.LogoText.Length)];
+
+    private static string NotEmpty(string? val, string fallback) =>
+        string.IsNullOrWhiteSpace(val) ? fallback : val;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var user = await Auth.GetUserInfoAsync();
+        isSuperAdmin = user?.Role == "Super Admin";
+        draft = new CompanyBrandingDto
+        {
+            CompanyName    = Branding.CompanyName,
+            CompanyTagline = Branding.CompanyTagline,
+            LogoText       = Branding.LogoText,
+            LogoUrl        = Branding.LogoUrl,
+            FaviconUrl     = Branding.FaviconUrl,
+            AppTitle       = Branding.AppTitle,
+        };
+    }
+
+    private Task UploadLogo(InputFileChangeEventArgs e)    => UploadAsset(e, "logo");
+    private Task UploadFavicon(InputFileChangeEventArgs e) => UploadAsset(e, "favicon");
+
+    private async Task UploadAsset(InputFileChangeEventArgs e, string type)
+    {
+        var file = e.File;
+        if (file.Size > 2 * 1024 * 1024)
+        {
+            SetMsg(type, false, "File too large (max 2MB)");
+            return;
+        }
+
+        SetUploading(type, true);
+        try
+        {
+            using var content = new MultipartFormDataContent();
+            using var stream = file.OpenReadStream(2 * 1024 * 1024);
+            content.Add(new StreamContent(stream), "file", file.Name);
+
+            var result = await Api.PostFileAsync($"/api/branding/upload/{type}", content);
+            if (result?.IsSuccess == true)
+            {
+                if (type == "logo")    draft.LogoUrl    = result.Data;
+                if (type == "favicon") draft.FaviconUrl = result.Data;
+                await Branding.RefreshAsync();
+                SetMsg(type, true, "Uploaded successfully");
+            }
+            else SetMsg(type, false, result?.Message ?? "Upload failed");
+        }
+        catch { SetMsg(type, false, "Upload failed"); }
+        SetUploading(type, false);
+    }
+
+    private async Task Save()
+    {
+        saving = true; saveMessage = null;
+        try
+        {
+            await Branding.SaveAsync(draft);
+            saveOk = true;
+            saveMessage = "Branding saved.";
+        }
+        catch { saveOk = false; saveMessage = "Failed to save."; }
+        saving = false;
+    }
+
+    private void ResetToDefaults()
+    {
+        draft = new CompanyBrandingDto();
+        saveMessage = null;
+        logoMsg = null;
+        faviconMsg = null;
+    }
+
+    private void SetUploading(string type, bool val)
+    {
+        if (type == "logo") logoUploading = val;
+        else faviconUploading = val;
+    }
+
+    private void SetMsg(string type, bool ok, string msg)
+    {
+        if (type == "logo") { logoOk = ok; logoMsg = msg; }
+        else { faviconOk = ok; faviconMsg = msg; }
+    }
+}
