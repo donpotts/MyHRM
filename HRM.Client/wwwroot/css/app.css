@@ -44,10 +44,32 @@ html, body, #app { height: 100%; margin: 0; padding: 0; }
 .star-filled { color: #f59e0b; }
 .star-empty  { color: #d1d5db; }
 
-.sidebar-collapsed { width: 64px; }
-.sidebar-expanded  { width: 240px; }
-.sidebar-collapsed .sidebar-text      { display: none; }
-.sidebar-collapsed .sidebar-logo-text { display: none; }
+.sidebar-collapsed { width: 64px; overflow: hidden; }
+.sidebar-expanded  { width: 240px; overflow: hidden; }
+
+/* Sidebar text reveal — slides in left-to-right as sidebar expands.
+   Using opacity+translateX instead of display:none prevents layout snap
+   during the width animation. transition-[width] on the aside keeps
+   child layout properties stable. */
+.sidebar-text,
+.sidebar-logo-text {
+    white-space: nowrap;
+    overflow: hidden;
+}
+.sidebar-collapsed .sidebar-text,
+.sidebar-collapsed .sidebar-logo-text {
+    opacity: 0;
+    transform: translateX(-6px);
+    pointer-events: none;
+    transition: opacity 0.08s ease, transform 0.08s ease;
+}
+.sidebar-expanded .sidebar-text,
+.sidebar-expanded .sidebar-logo-text {
+    opacity: 1;
+    transform: translateX(0);
+    pointer-events: auto;
+    transition: opacity 0.18s ease 0.16s, transform 0.18s ease 0.16s;
+}
 
 /* Mobile sidebar slide transition */
 @media (max-width: 1023px) {

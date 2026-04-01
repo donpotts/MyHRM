@@ -4,7 +4,7 @@
 
 <PageTitle>Organization</PageTitle>
 
-<TabContainer Tabs="tabs" ActiveTab="@activeTab" OnTabChanged="t => { activeTab = t; _ = LoadTab(); }" />
+<TabContainer Tabs="tabs" ActiveTab="@activeTab" OnTabChanged="async t => { activeTab = t; await LoadTab(); }" />
 
 <div class="bg-white rounded-b-lg border border-t-0 border-gray-200 p-4">
     @switch (activeTab)
@@ -143,7 +143,7 @@
                     </table>
                 </div>
                 <Pagination Page="empPage" PageSize="empPageSize" TotalCount="employees.TotalCount"
-                            PageChanged="p => { empPage = p; _ = LoadEmployees(); }" PageSizeChanged="s => { empPageSize = s; empPage = 1; _ = LoadEmployees(); }" />
+                            PageChanged="async p => { empPage = p; await LoadEmployees(); }" PageSizeChanged="async s => { empPageSize = s; empPage = 1; await LoadEmployees(); }" />
             }
             break;
     }

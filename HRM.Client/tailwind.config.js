@@ -27,8 +27,8 @@ module.exports = {
     'from-amber-500',  'to-orange-600',
     // Theme toggle slider
     'translate-x-1', 'translate-x-6',
-    // Sidebar state classes
-    'lg:sidebar-collapsed', 'lg:sidebar-expanded',
+    // Sidebar state classes (applied without lg: prefix — matched by app.css rules)
+    'sidebar-collapsed', 'sidebar-expanded',
     // Safelist full color palette for accent remapping and dark mode overrides
     {
       pattern: /^(bg|text|border|ring|from|to|via)-(indigo|violet|blue|emerald|rose|amber|purple|teal|pink|orange|green|red|yellow|gray|slate)-(50|100|200|300|400|500|600|700|800|900)$/,

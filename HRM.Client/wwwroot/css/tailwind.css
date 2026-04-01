@@ -502,6 +502,9 @@ video {
 .pointer-events-none {
   pointer-events: none;
 }
+.collapse {
+  visibility: collapse;
+}
 .static {
   position: static;
 }
@@ -520,9 +523,6 @@ video {
 .inset-y-0 {
   top: 0px;
   bottom: 0px;
-}
-.-left-64 {
-  left: -16rem;
 }
 .bottom-0 {
   bottom: 0px;
@@ -662,9 +662,6 @@ video {
 .inline-block {
   display: inline-block;
 }
-.inline {
-  display: inline;
-}
 .flex {
   display: flex;
 }
@@ -767,11 +764,11 @@ video {
 .w-4 {
   width: 1rem;
 }
-.w-48 {
-  width: 12rem;
-}
 .w-56 {
   width: 14rem;
+}
+.w-6 {
+  width: 1.5rem;
 }
 .w-7 {
   width: 1.75rem;
@@ -4253,9 +4250,6 @@ video {
 .text-right {
   text-align: right;
 }
-.align-middle {
-  vertical-align: middle;
-}
 .font-\[\'Inter\'\] {
   font-family: 'Inter';
 }
@@ -5609,6 +5603,9 @@ video {
   --tw-ring-opacity: 1;
   --tw-ring-color: rgb(113 63 18 / var(--tw-ring-opacity, 1));
 }
+.ring-offset-1 {
+  --tw-ring-offset-width: 1px;
+}
 .ring-offset-2 {
   --tw-ring-offset-width: 2px;
 }
@@ -5624,6 +5621,11 @@ video {
 }
 .transition-colors {
   transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}
+.transition-opacity {
+  transition-property: opacity;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   transition-duration: 150ms;
 }
@@ -9322,6 +9324,9 @@ video {
 }
 .hover\:underline:hover {
   text-decoration-line: underline;
+}
+.hover\:opacity-80:hover {
+  opacity: 0.8;
 }
 .hover\:ring-amber-100:hover {
   --tw-ring-opacity: 1;
@@ -23637,9 +23642,6 @@ video {
   --tw-bg-opacity: 1;
   background-color: rgb(51 65 85 / var(--tw-bg-opacity, 1));
 }
-.dark\:hover\:bg-slate-700\/50:hover:is(.dark *) {
-  background-color: rgb(51 65 85 / 0.5);
-}
 .dark\:hover\:bg-slate-800:hover:is(.dark *) {
   --tw-bg-opacity: 1;
   background-color: rgb(30 41 59 / var(--tw-bg-opacity, 1));
@@ -26852,10 +26854,6 @@ video {
   }
 }
 @media (min-width: 1024px) {
-
-  .lg\:left-auto {
-    left: auto;
-  }
 
   .lg\:col-span-1 {
     grid-column: span 1 / span 1;

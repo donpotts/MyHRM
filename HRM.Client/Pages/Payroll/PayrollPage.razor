@@ -79,7 +79,7 @@
                 @if (payrolls is not null)
                 {
                     <Pagination Page="page" PageSize="pageSize" TotalCount="payrolls.TotalCount"
-                                PageChanged="p => { page = p; _ = LoadPayroll(); }" PageSizeChanged="s => { pageSize = s; page = 1; _ = LoadPayroll(); }" />
+                                PageChanged="async p => { page = p; await LoadPayroll(); }" PageSizeChanged="async s => { pageSize = s; page = 1; await LoadPayroll(); }" />
                 }
             </div>
             break;

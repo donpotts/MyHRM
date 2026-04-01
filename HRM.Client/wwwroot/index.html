@@ -145,6 +145,40 @@
                 });
             }
         };
+        (function () {
+            var tip = null;
+            function getTip() {
+                if (!tip) {
+                    tip = document.createElement('div');
+                    tip.style.cssText = 'position:fixed;z-index:9999;background:#1e293b;color:#f1f5f9;' +
+                        'padding:5px 12px;border-radius:6px;font-size:12px;font-weight:500;' +
+                        'pointer-events:none;white-space:nowrap;' +
+                        'box-shadow:0 4px 12px rgba(0,0,0,0.35);opacity:0;transition:opacity 0.12s ease;';
+                    document.body.appendChild(tip);
+                }
+                return tip;
+            }
+            document.addEventListener('mouseover', function (e) {
+                var el = e.target && e.target.closest('[data-nav-tip]');
+                if (!el) return;
+                var label = el.getAttribute('data-nav-tip');
+                if (!label) return;
+                var t = getTip();
+                t.textContent = label;
+                var r = el.getBoundingClientRect();
+                t.style.opacity = '0'; t.style.top = '-9999px';
+                requestAnimationFrame(function () {
+                    t.style.left = (r.right + 10) + 'px';
+                    t.style.top = Math.round(r.top + (r.height - t.offsetHeight) / 2) + 'px';
+                    t.style.opacity = '1';
+                });
+            });
+            document.addEventListener('mouseout', function (e) {
+                if (!e.relatedTarget || !e.relatedTarget.closest('[data-nav-tip]')) {
+                    if (tip) tip.style.opacity = '0';
+                }
+            });
+        })();
     </script>
 </body>
 

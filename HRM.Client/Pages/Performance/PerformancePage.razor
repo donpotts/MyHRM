@@ -104,7 +104,7 @@
                 @if (evals is not null)
                 {
                     <Pagination Page="page" PageSize="pageSize" TotalCount="evals.TotalCount"
-                                PageChanged="p => { page = p; _ = LoadEvals(); }" PageSizeChanged="s => { pageSize = s; page = 1; _ = LoadEvals(); }" />
+                                PageChanged="async p => { page = p; await LoadEvals(); }" PageSizeChanged="async s => { pageSize = s; page = 1; await LoadEvals(); }" />
                 }
             </div>
             break;
